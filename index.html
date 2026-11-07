@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Wavelength - Telepathic Party Game</title>
+  <meta name="description" content="A standalone, production-ready web implementation of the board game Wavelength. Read your team's mind along the spectrum!">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="game-header">
+      <div class="logo-area">
+        <h1 class="logo">WAVELENGTH</h1>
+        <span class="tagline">A Game of Telepathic Calibration</span>
+      </div>
+      <div class="dashboard">
+        <div class="stat-card">
+          <span class="stat-label">ROUND</span>
+          <span class="stat-value" id="round-number">1</span>
+        </div>
+        <div class="stat-card score-card">
+          <span class="stat-label">TOTAL SCORE</span>
+          <span class="stat-value highlight" id="total-score">0</span>
+        </div>
+        <button id="btn-sound-toggle" class="icon-btn" title="Toggle Sound" aria-label="Toggle Sound">
+          <svg id="sound-icon-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Spectrum Card Display -->
+    <section class="card-section">
+      <div class="spectrum-card">
+        <div class="spectrum-end left-end">
+          <span class="spectrum-sub">0° (LEFT)</span>
+          <span class="concept-text" id="left-concept">COLD</span>
+        </div>
+        <div class="spectrum-connector">
+          <div class="connector-line"></div>
+          <div class="connector-badge">VS</div>
+          <div class="connector-line"></div>
+        </div>
+        <div class="spectrum-end right-end">
+          <span class="spectrum-sub">180° (RIGHT)</span>
+          <span class="concept-text" id="right-concept">HOT</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Game Board / Device Section -->
+    <main class="board-section">
+      <div class="device-casing">
+        <!-- Wheel Visualizer -->
+        <div class="wheel-stage" id="wheel-stage">
+          <svg viewBox="0 0 500 290" class="wheel-svg" id="wavelength-svg" aria-label="Wavelength Wheel">
+            <defs>
+              <!-- Drop shadows and gradients -->
+              <filter id="shadow-needle" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.45" />
+              </filter>
+              <filter id="shutter-shadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.5" />
+              </filter>
+              <radialGradient id="dial-bg" cx="50%" cy="100%" r="90%">
+                <stop offset="0%" stop-color="#232734" />
+                <stop offset="100%" stop-color="#151720" />
+              </radialGradient>
+              <linearGradient id="shutter-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#343948" />
+                <stop offset="60%" stop-color="#282d3b" />
+                <stop offset="100%" stop-color="#1e222d" />
+              </linearGradient>
+            </defs>
+
+            <!-- Outer rim -->
+            <path d="M 15 250 A 235 235 0 0 1 485 250 Z" class="svg-rim-outer" />
+            <path d="M 25 250 A 225 225 0 0 1 475 250 Z" class="svg-rim-inner" />
+            
+            <!-- Wheel Arc Baseline Tick Marks -->
+            <g class="ticks-group" id="ticks-group"></g>
+
+            <!-- Target Slices Group (Revealed or Hidden behind Shutter) -->
+            <g id="target-slices-group" class="target-slices-group"></g>
+
+            <!-- Mechanical Shutter (Slide Cover) -->
+            <g id="shutter-group" class="shutter-group closed">
+              <path d="M 28 250 A 222 222 0 0 1 472 250 Z" fill="url(#shutter-grad)" filter="url(#shutter-shadow)" class="shutter-body" />
+              <circle cx="250" cy="250" r="140" fill="none" stroke="#484f63" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
+              <circle cx="250" cy="250" r="185" fill="none" stroke="#484f63" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
+              <text x="250" y="160" text-anchor="middle" class="shutter-text">TARGET CONCEALED</text>
+              <text x="250" y="185" text-anchor="middle" class="shutter-subtext">Psychic Peek / Team Guessing</text>
+            </g>
+
+            <!-- Needle Layer (Draggable Red Pointer) -->
+            <g id="needle-group" class="needle-group" transform="rotate(90, 250, 250)">
+              <!-- Invisible fat hit area for easy grabbing on touch screens -->
+              <rect x="230" y="25" width="40" height="235" fill="transparent" class="needle-grab-area" style="cursor: grab;" />
+              <!-- Pointer Blade -->
+              <polygon points="250,25 244,250 256,250" class="needle-blade" filter="url(#shadow-needle)" />
+              <polygon points="250,25 248,250 252,250" fill="#ff7675" opacity="0.8" />
+              <circle cx="250" cy="45" r="9" class="needle-head-marker" />
+              <circle cx="250" cy="45" r="4" fill="#ffffff" />
+            </g>
+
+            <!-- Central Hub / Knob Pivot -->
+            <circle cx="250" cy="250" r="32" class="dial-hub-shadow" />
+            <circle cx="250" cy="250" r="28" class="dial-hub-outer" />
+            <circle cx="250" cy="250" r="16" class="dial-hub-inner" />
+            <circle cx="250" cy="250" r="6" fill="#f8f9fa" />
+
+            <!-- Baseline Edge Protector -->
+            <rect x="15" y="248" width="470" height="12" class="casing-shelf" />
+          </svg>
+        </div>
+
+        <!-- Current Needle Readout -->
+        <div class="needle-readout-bar">
+          <div class="angle-display">
+            <span class="angle-lbl">GUESS POSITION:</span>
+            <span class="angle-val" id="angle-value">90°</span>
+            <span class="angle-desc" id="angle-description">(Center)</span>
+          </div>
+          <div class="instruction-banner" id="game-status-banner">
+            1. Psychic: Click <strong>Peek Target</strong> to see where the slice is, then give your team a clue!
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Controls Panel -->
+    <section class="controls-panel">
+      <!-- Psychic Controls -->
+      <div class="control-group">
+        <button id="btn-peek" class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          Psychic Peek
+        </button>
+        <button id="btn-hide" class="btn btn-secondary active-shutter-action">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+          Hide Target
+        </button>
+        <button id="btn-reveal" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          Reveal Target & Score
+        </button>
+      </div>
+
+      <!-- Turn & Flow Navigation -->
+      <div class="control-group flow-group">
+        <button id="btn-next-round" class="btn btn-accent" disabled>
+          Next Round &rarr;
+        </button>
+        <button id="btn-new-game" class="btn btn-outline">
+          New Game
+        </button>
+      </div>
+    </section>
+
+    <!-- Round Result Toast / Modal Modal -->
+    <div id="result-modal" class="result-modal hidden">
+      <div class="modal-card">
+        <h3 id="result-title" class="result-title">Bull's Eye!</h3>
+        <div class="result-points" id="result-points">+5 PTS</div>
+        <p class="result-detail" id="result-detail">Incredible psychic link! Direct hit in the dark blue zone.</p>
+        <div class="score-breakdown">
+          <span>Target Center: <strong id="res-target-deg">0°</strong></span>
+          <span>Your Dial: <strong id="res-needle-deg">0°</strong></span>
+          <span>Difference: <strong id="res-diff-deg">0°</strong></span>
+        </div>
+        <button id="btn-modal-dismiss" class="btn btn-accent modal-btn">Continue</button>
+      </div>
+    </div>
+
+    <!-- Rules & Guide Drawer Footer -->
+    <footer class="game-footer">
+      <details class="rules-accordion">
+        <summary>Game Rules & Scoring Breakdown</summary>
+        <div class="rules-content">
+          <div class="rule-step">
+            <strong>1. The Psychic</strong> draws a binary spectrum (e.g. HOT ↔ COLD) and clicks <em>Psychic Peek</em> to view the hidden target position.
+          </div>
+          <div class="rule-step">
+            <strong>2. The Clue</strong>: The psychic says a one-concept clue reflecting where the target lies on that spectrum (e.g. "Coffee!" for hot, or "Lava!" for maximum right). <em>The target must remain hidden from the rest of the team!</em>
+          </div>
+          <div class="rule-step">
+            <strong>3. The Guess</strong>: The team discusses and drags the red needle along the 180° dial to align with where they think the clue lands.
+          </div>
+          <div class="rule-step">
+            <strong>4. Reveal</strong>: Click <em>Reveal Target & Score</em> to open the shutter and calculate points!
+          </div>
+          <div class="scoring-guide">
+            <div class="score-badge badge-5"><span class="pip bullseye"></span> 5 Pts: Bull's Eye (Center Dark Blue, ±2°)</div>
+            <div class="score-badge badge-3"><span class="pip close"></span> 3 Pts: Close (Yellow, ±6°)</div>
+            <div class="score-badge badge-1"><span class="pip near"></span> 1 Pt: Near (Red, ±10°)</div>
+            <div class="score-badge badge-0"><span class="pip miss"></span> 0 Pts: Miss (Outside target slice)</div>
+          </div>
+        </div>
+      </details>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

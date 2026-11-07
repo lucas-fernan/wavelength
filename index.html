@@ -3,213 +3,201 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Wavelength - Telepathic Party Game</title>
-  <meta name="description" content="A standalone, production-ready web implementation of the board game Wavelength. Read your team's mind along the spectrum!">
+  <title>WAVELENGTH // 1984 SYNTHWAVE EDITION</title>
+  <meta name="description" content="Radical 80s Neon Synthwave Wavelength game. Calibrate the telepathic frequency!">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- 80s Retro Fonts: Press Start 2P, Orbitron, VT323 -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app-container">
-    <!-- Header -->
-    <header class="game-header">
-      <div class="logo-area">
-        <h1 class="logo">WAVELENGTH</h1>
-        <span class="tagline">A Game of Telepathic Calibration</span>
+  <!-- CRT Screen Scanline Overlay & Background Grid -->
+  <div class="crt-overlay"></div>
+  <div class="synth-sun"></div>
+  <div class="synth-grid"></div>
+
+  <div class="cabinet-container">
+    <!-- Retro Arcade Header -->
+    <header class="arcade-header">
+      <div class="title-marquee">
+        <h1 class="glitch-title" data-text="WAVELENGTH">WAVELENGTH</h1>
+        <div class="arcade-sub">SYSTEM // 1984 &bull; RETRO SPECTRUM CONSOLE</div>
       </div>
-      <div class="dashboard">
-        <div class="stat-card">
-          <span class="stat-label">ROUND</span>
-          <span class="stat-value" id="round-number">1</span>
+      <div class="arcade-dash">
+        <div class="hud-box">
+          <span class="hud-label">STAGE</span>
+          <span class="hud-val" id="round-number">01</span>
         </div>
-        <div class="stat-card score-card">
-          <span class="stat-label">TOTAL SCORE</span>
-          <span class="stat-value highlight" id="total-score">0</span>
+        <div class="hud-box score-box">
+          <span class="hud-label">SCORE</span>
+          <span class="hud-val neon-pink-text" id="total-score">0000</span>
         </div>
-        <button id="btn-sound-toggle" class="icon-btn" title="Toggle Sound" aria-label="Toggle Sound">
-          <svg id="sound-icon-on" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          </svg>
-          <svg id="sound-icon-off" class="hidden" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <line x1="23" y1="9" x2="17" y2="15"></line>
-            <line x1="17" y1="9" x2="23" y2="15"></line>
-          </svg>
+        <button id="btn-sound-toggle" class="arcade-icon-btn" title="AUDIO TOGGLE">
+          <span id="sound-indicator">SFX: ON</span>
         </button>
       </div>
     </header>
 
-    <!-- Spectrum Card Display -->
-    <section class="card-section">
-      <div class="spectrum-card">
-        <div class="spectrum-end left-end">
-          <span class="spectrum-sub">0° (LEFT)</span>
-          <span class="concept-text" id="left-concept">COLD</span>
-        </div>
-        <div class="spectrum-connector">
-          <div class="connector-line"></div>
-          <div class="connector-badge">VS</div>
-          <div class="connector-line"></div>
-        </div>
-        <div class="spectrum-end right-end">
-          <span class="spectrum-sub">180° (RIGHT)</span>
-          <span class="concept-text" id="right-concept">HOT</span>
+    <!-- Main Arcade Cabinet Section -->
+    <main class="arcade-chassis">
+      <!-- Instruction Banner Display -->
+      <div class="crt-terminal-bar">
+        <div class="terminal-led"></div>
+        <div class="terminal-message" id="game-status-banner">
+          [SYS_READY] TARGET IS VISIBLE. MEMORIZE FREQUENCY, THEN PRESS [HIDE TARGET]!
         </div>
       </div>
-    </section>
 
-    <!-- Main Game Board / Device Section -->
-    <main class="board-section">
-      <div class="device-casing">
-        <!-- Wheel Visualizer -->
-        <div class="wheel-stage" id="wheel-stage">
-          <svg viewBox="0 0 500 290" class="wheel-svg" id="wavelength-svg" aria-label="Wavelength Wheel">
-            <defs>
-              <!-- Drop shadows and gradients -->
-              <filter id="shadow-needle" x="-30%" y="-30%" width="160%" height="160%">
-                <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#000" flood-opacity="0.45" />
-              </filter>
-              <filter id="shutter-shadow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.5" />
-              </filter>
-              <radialGradient id="dial-bg" cx="50%" cy="100%" r="90%">
-                <stop offset="0%" stop-color="#232734" />
-                <stop offset="100%" stop-color="#151720" />
-              </radialGradient>
-              <linearGradient id="shutter-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stop-color="#343948" />
-                <stop offset="60%" stop-color="#282d3b" />
-                <stop offset="100%" stop-color="#1e222d" />
-              </linearGradient>
-            </defs>
+      <!-- Wheel Visualizer -->
+      <div class="wheel-stage" id="wheel-stage">
+        <svg viewBox="0 0 500 290" class="wheel-svg" id="wavelength-svg" aria-label="Neon Spectrum Gauge">
+          <defs>
+            <!-- 80s Neon Glow Filters -->
+            <filter id="neon-glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur1" />
+              <feGaussianBlur stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-            <!-- Outer rim -->
-            <path d="M 15 250 A 235 235 0 0 1 485 250 Z" class="svg-rim-outer" />
-            <path d="M 25 250 A 225 225 0 0 1 475 250 Z" class="svg-rim-inner" />
-            
-            <!-- Wheel Arc Baseline Tick Marks -->
-            <g class="ticks-group" id="ticks-group"></g>
+            <filter id="neon-glow-pink" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="9" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-            <!-- Target Slices Group (Revealed or Hidden behind Shutter) -->
-            <g id="target-slices-group" class="target-slices-group"></g>
+            <filter id="shutter-metal">
+              <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#ff007f" flood-opacity="0.3" />
+            </filter>
 
-            <!-- Mechanical Shutter (Slide Cover) -->
-            <g id="shutter-group" class="shutter-group closed">
-              <path d="M 28 250 A 222 222 0 0 1 472 250 Z" fill="url(#shutter-grad)" filter="url(#shutter-shadow)" class="shutter-body" />
-              <circle cx="250" cy="250" r="140" fill="none" stroke="#484f63" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.6"/>
-              <circle cx="250" cy="250" r="185" fill="none" stroke="#484f63" stroke-width="1.5" stroke-dasharray="4 6" opacity="0.4"/>
-              <text x="250" y="160" text-anchor="middle" class="shutter-text">TARGET CONCEALED</text>
-              <text x="250" y="185" text-anchor="middle" class="shutter-subtext">Psychic Peek / Team Guessing</text>
-            </g>
+            <linearGradient id="wheel-inner-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#0a051b" />
+              <stop offset="100%" stop-color="#190734" />
+            </linearGradient>
 
-            <!-- Needle Layer (Draggable Red Pointer) -->
-            <g id="needle-group" class="needle-group" transform="rotate(90, 250, 250)">
-              <!-- Invisible fat hit area for easy grabbing on touch screens -->
-              <rect x="230" y="25" width="40" height="235" fill="transparent" class="needle-grab-area" style="cursor: grab;" />
-              <!-- Pointer Blade -->
-              <polygon points="250,25 244,250 256,250" class="needle-blade" filter="url(#shadow-needle)" />
-              <polygon points="250,25 248,250 252,250" fill="#ff7675" opacity="0.8" />
-              <circle cx="250" cy="45" r="9" class="needle-head-marker" />
-              <circle cx="250" cy="45" r="4" fill="#ffffff" />
-            </g>
+            <linearGradient id="shutter-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#1a0b33" />
+              <stop offset="50%" stop-color="#2c0f4f" />
+              <stop offset="100%" stop-color="#140628" />
+            </linearGradient>
 
-            <!-- Central Hub / Knob Pivot -->
-            <circle cx="250" cy="250" r="32" class="dial-hub-shadow" />
-            <circle cx="250" cy="250" r="28" class="dial-hub-outer" />
-            <circle cx="250" cy="250" r="16" class="dial-hub-inner" />
-            <circle cx="250" cy="250" r="6" fill="#f8f9fa" />
+            <pattern id="shutter-hatch" width="12" height="12" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="#ff007f" stroke-width="1.2" opacity="0.35" />
+            </pattern>
+          </defs>
 
-            <!-- Baseline Edge Protector -->
-            <rect x="15" y="248" width="470" height="12" class="casing-shelf" />
-          </svg>
+          <!-- Outer Chassis Rim with Neon Stroke -->
+          <path d="M 15 250 A 235 235 0 0 1 485 250 Z" class="svg-rim-outer" />
+          <path d="M 25 250 A 225 225 0 0 1 475 250 Z" class="svg-rim-inner" />
+          
+          <!-- Arc Scale Ticks -->
+          <g class="ticks-group" id="ticks-group"></g>
+
+          <!-- Target Slices Group (Center Blue=3, Yellow=2, Red=1) -->
+          <g id="target-slices-group" class="target-slices-group"></g>
+
+          <!-- Motorized Neon Shutter Cover -->
+          <g id="shutter-group" class="shutter-group opened">
+            <path d="M 28 250 A 222 222 0 0 1 472 250 Z" fill="url(#shutter-grad)" class="shutter-body" />
+            <path d="M 28 250 A 222 222 0 0 1 472 250 Z" fill="url(#shutter-hatch)" />
+            <!-- Shutter Neon Accents -->
+            <path d="M 50 250 A 200 200 0 0 1 450 250" fill="none" stroke="#ff007f" stroke-width="2" stroke-dasharray="6 8" opacity="0.8" />
+            <path d="M 90 250 A 160 160 0 0 1 410 250" fill="none" stroke="#00ffff" stroke-width="2" stroke-dasharray="4 10" opacity="0.6" />
+            <rect x="130" y="145" width="240" height="46" rx="6" fill="#0d041a" stroke="#ff007f" stroke-width="1.5" />
+            <text x="250" y="167" text-anchor="middle" class="shutter-text">TARGET CONCEALED</text>
+            <text x="250" y="182" text-anchor="middle" class="shutter-subtext">SET NEEDLE &bull; PRESS CONFIRM</text>
+          </g>
+
+          <!-- Needle Layer (Laser Red/Pink Pointer) -->
+          <g id="needle-group" class="needle-group" transform="rotate(0, 250, 250)">
+            <!-- Big hit area for silky smooth touch / drag -->
+            <rect x="220" y="15" width="60" height="245" fill="transparent" class="needle-hit-area" />
+            <!-- Laser Needle Blade -->
+            <polygon points="250,22 244,250 256,250" class="needle-blade" filter="url(#neon-glow-pink)" />
+            <line x1="250" y1="22" x2="250" y2="250" stroke="#ffffff" stroke-width="2.5" />
+            <circle cx="250" cy="35" r="8" fill="#ffffff" filter="url(#neon-glow-pink)" />
+            <circle cx="250" cy="35" r="4" fill="#ff0055" />
+          </g>
+
+          <!-- Center Pivot Knob & Neon Ring -->
+          <circle cx="250" cy="250" r="34" class="dial-pivot-bg" />
+          <circle cx="250" cy="250" r="30" class="dial-pivot-neon" />
+          <circle cx="250" cy="250" r="18" fill="#120426" stroke="#00ffff" stroke-width="2" />
+          <circle cx="250" cy="250" r="6" fill="#ff007f" />
+
+          <!-- Bottom Console Bar -->
+          <rect x="15" y="248" width="470" height="14" class="console-edge" />
+        </svg>
+      </div>
+
+      <!-- Live Digital Readout -->
+      <div class="readout-console">
+        <div class="degree-box">
+          <span class="readout-label">ANGLE:</span>
+          <span class="readout-value" id="angle-value">90.0°</span>
         </div>
-
-        <!-- Current Needle Readout -->
-        <div class="needle-readout-bar">
-          <div class="angle-display">
-            <span class="angle-lbl">GUESS POSITION:</span>
-            <span class="angle-val" id="angle-value">90°</span>
-            <span class="angle-desc" id="angle-description">(Center)</span>
-          </div>
-          <div class="instruction-banner" id="game-status-banner">
-            1. Psychic: Click <strong>Peek Target</strong> to see where the slice is, then give your team a clue!
-          </div>
+        <div class="point-scale-hint">
+          <span class="score-pill pill-blue">BLUE = 3 PTS</span>
+          <span class="score-pill pill-yellow">YELLOW = 2 PTS</span>
+          <span class="score-pill pill-red">RED = 1 PT</span>
         </div>
       </div>
     </main>
 
-    <!-- Controls Panel -->
-    <section class="controls-panel">
-      <!-- Psychic Controls -->
-      <div class="control-group">
-        <button id="btn-peek" class="btn btn-secondary">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-          Psychic Peek
+    <!-- Main Arcade Control Deck -->
+    <section class="arcade-deck">
+      <div class="action-buttons">
+        <button id="btn-hide" class="neon-btn btn-magenta">
+          <span class="btn-scan"></span>
+          HIDE TARGET
         </button>
-        <button id="btn-hide" class="btn btn-secondary active-shutter-action">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-          Hide Target
-        </button>
-        <button id="btn-reveal" class="btn btn-primary">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-          Reveal Target & Score
+        <button id="btn-confirm" class="neon-btn btn-cyan" disabled>
+          <span class="btn-scan"></span>
+          CONFIRM GUESS
         </button>
       </div>
-
-      <!-- Turn & Flow Navigation -->
-      <div class="control-group flow-group">
-        <button id="btn-next-round" class="btn btn-accent" disabled>
-          Next Round &rarr;
+      <div class="nav-buttons">
+        <button id="btn-next-round" class="neon-btn btn-yellow" disabled>
+          NEXT ROUND &gt;&gt;
         </button>
-        <button id="btn-new-game" class="btn btn-outline">
-          New Game
+        <button id="btn-reset" class="neon-btn btn-dim">
+          RESET
         </button>
       </div>
     </section>
 
-    <!-- Round Result Toast / Modal Modal -->
+    <!-- Retro Result Modal -->
     <div id="result-modal" class="result-modal hidden">
-      <div class="modal-card">
-        <h3 id="result-title" class="result-title">Bull's Eye!</h3>
-        <div class="result-points" id="result-points">+5 PTS</div>
-        <p class="result-detail" id="result-detail">Incredible psychic link! Direct hit in the dark blue zone.</p>
-        <div class="score-breakdown">
-          <span>Target Center: <strong id="res-target-deg">0°</strong></span>
-          <span>Your Dial: <strong id="res-needle-deg">0°</strong></span>
-          <span>Difference: <strong id="res-diff-deg">0°</strong></span>
+      <div class="modal-arcade-card">
+        <div class="arcade-scanner"></div>
+        <h2 id="result-title" class="res-title">DIRECT HIT!</h2>
+        <div id="result-score-tag" class="res-score-badge">+3 POINTS</div>
+        <p id="result-detail" class="res-desc">PERFECT TELEPATHIC LOCK IN THE BLUE ZONE!</p>
+        <div class="telemetry-grid">
+          <div class="tele-item">
+            <span class="tele-lbl">TARGET:</span>
+            <span class="tele-val" id="res-target-deg">0°</span>
+          </div>
+          <div class="tele-item">
+            <span class="tele-lbl">YOUR DIAL:</span>
+            <span class="tele-val" id="res-needle-deg">0°</span>
+          </div>
+          <div class="tele-item">
+            <span class="tele-lbl">VARIANCE:</span>
+            <span class="tele-val" id="res-diff-deg">0°</span>
+          </div>
         </div>
-        <button id="btn-modal-dismiss" class="btn btn-accent modal-btn">Continue</button>
+        <button id="btn-modal-dismiss" class="neon-btn btn-cyan modal-btn">CONTINUE &gt;&gt;</button>
       </div>
     </div>
-
-    <!-- Rules & Guide Drawer Footer -->
-    <footer class="game-footer">
-      <details class="rules-accordion">
-        <summary>Game Rules & Scoring Breakdown</summary>
-        <div class="rules-content">
-          <div class="rule-step">
-            <strong>1. The Psychic</strong> draws a binary spectrum (e.g. HOT ↔ COLD) and clicks <em>Psychic Peek</em> to view the hidden target position.
-          </div>
-          <div class="rule-step">
-            <strong>2. The Clue</strong>: The psychic says a one-concept clue reflecting where the target lies on that spectrum (e.g. "Coffee!" for hot, or "Lava!" for maximum right). <em>The target must remain hidden from the rest of the team!</em>
-          </div>
-          <div class="rule-step">
-            <strong>3. The Guess</strong>: The team discusses and drags the red needle along the 180° dial to align with where they think the clue lands.
-          </div>
-          <div class="rule-step">
-            <strong>4. Reveal</strong>: Click <em>Reveal Target & Score</em> to open the shutter and calculate points!
-          </div>
-          <div class="scoring-guide">
-            <div class="score-badge badge-5"><span class="pip bullseye"></span> 5 Pts: Bull's Eye (Center Dark Blue, ±2°)</div>
-            <div class="score-badge badge-3"><span class="pip close"></span> 3 Pts: Close (Yellow, ±6°)</div>
-            <div class="score-badge badge-1"><span class="pip near"></span> 1 Pt: Near (Red, ±10°)</div>
-            <div class="score-badge badge-0"><span class="pip miss"></span> 0 Pts: Miss (Outside target slice)</div>
-          </div>
-        </div>
-      </details>
-    </footer>
   </div>
 
   <script src="app.js"></script>

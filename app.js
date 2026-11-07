@@ -1,79 +1,12 @@
 /**
- * WAVELENGTH - Standalone Web Implementation
- * Complete game logic, drag mechanics, audio synthesis, and scoring.
+ * WAVELENGTH // 1984 SYNTHWAVE EDITION
+ * Pure 80s arcade style, improved fluid needle dragging,
+ * scoring: Blue=3, Yellow=2, Red=1, Miss=0
+ * flow: Target visible at start -> Hide Target -> Move needle -> Confirm Guess -> Target revealed!
  */
 
-// 60+ curated binary pairs covering diverse domains
-const SPECTRUM_PAIRS = [
-  ["Cold", "Hot"],
-  ["Rough", "Smooth"],
-  ["Underrated", "Overrated"],
-  ["Bad Actor", "Good Actor"],
-  ["Useless Superpower", "Useful Superpower"],
-  ["Guilty Pleasure", "Openly Proud"],
-  ["Soft", "Hard"],
-  ["Cheap", "Expensive"],
-  ["Quiet", "Loud"],
-  ["Boring Hobby", "Exciting Hobby"],
-  ["Tastes Terrible", "Delicious"],
-  ["Harmless", "Extremely Dangerous"],
-  ["Low Calorie", "High Calorie"],
-  ["Unethical", "Ethical"],
-  ["Waste of Time", "Time Well Spent"],
-  ["Historical Event", "Pop Culture"],
-  ["Requires Skill", "Pure Luck"],
-  ["Sad Movie", "Happy Movie"],
-  ["Smells Bad", "Smells Good"],
-  ["Easy to Learn", "Difficult to Master"],
-  ["Introvert", "Extrovert"],
-  ["Casual", "Formal"],
-  ["Temporary", "Permanent"],
-  ["Unpopular Opinion", "Universal Fact"],
-  ["Selfish", "Altruistic"],
-  ["Traditional", "Futuristic"],
-  ["Mild", "Spicy"],
-  ["Niche", "Mainstream"],
-  ["Feels Illegal But Isn't", "Feels Legal But Is Illegal"],
-  ["Messy", "Neat"],
-  ["Weak", "Strong"],
-  ["Unforgivable", "Easily Forgiven"],
-  ["Nerdy", "Cool"],
-  ["Short-term Fix", "Permanent Solution"],
-  ["Normal Pet", "Exotic Pet"],
-  ["Dull", "Sharp"],
-  ["Fad", "Timeless Classic"],
-  ["Dark", "Bright"],
-  ["Low Risk", "High Risk"],
-  ["Forgettable", "Unforgettable"],
-  ["Childish", "Mature"],
-  ["Superficial", "Deep"],
-  ["Overpriced", "Bargain"],
-  ["Scary", "Funny"],
-  ["Slow", "Fast"],
-  ["Awkward", "Smooth"],
-  ["Microscopic", "Gigantic"],
-  ["Annoying", "Charming"],
-  ["Artificial", "Natural"],
-  ["Predictable", "Surprising"],
-  ["Bad Habit", "Good Habit"],
-  ["Chaotic Evil", "Lawful Good"],
-  ["Fragile", "Indestructible"],
-  ["Ordinary", "Magical"],
-  ["Trivial", "Life-Changing"],
-  ["Basic", "Artistic"],
-  ["Overrated Movie", "Underrated Movie"],
-  ["Ugly", "Beautiful"],
-  ["Temporary Trend", "Forever"],
-  ["Comfort Food", "Acquired Taste"],
-  ["Easy to Break", "Sturdy"],
-  ["Trashy", "Classy"],
-  ["Awkward Silence", "Deep Conversation"],
-  ["Unpleasant chore", "Satisfying chore"],
-  ["Cold Drink", "Warm Drink"]
-];
-
-// Audio Synthesizer using Web Audio API for tactile clicks & chimes
-class SoundEffects {
+// 80s Retro Chiptune & Synth Synthesizer via Web Audio API
+class RetroSynthAudio {
   constructor() {
     this.ctx = null;
     this.enabled = true;
@@ -81,9 +14,9 @@ class SoundEffects {
 
   init() {
     if (!this.ctx) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        this.ctx = new AudioContext();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx) {
+        this.ctx = new AudioCtx();
       }
     }
     if (this.ctx && this.ctx.state === 'suspended') {
@@ -96,8 +29,8 @@ class SoundEffects {
     return this.enabled;
   }
 
-  // Subdued mechanical dial click
-  playTick() {
+  // Chiptune blip when turning the needle
+  playTick(angle) {
     if (!this.enabled) return;
     this.init();
     if (!this.ctx) return;
@@ -106,111 +39,116 @@ class SoundEffects {
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
 
-      osc.type = 'triangle';
-      // High pitch instant burst
-      osc.frequency.setValueAtTime(800 + Math.random() * 300, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.015);
+      osc.type = 'square';
+      // Pitch shifts subtly with dial angle like a retro tuner
+      const freq = 350 + (angle / 180) * 450;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.025);
 
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.015);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.02);
-    } catch (e) {
-      // Audio autoplay policy catch
-    }
-  }
-
-  // Shutter slide sound
-  playShutter() {
-    if (!this.enabled) return;
-    this.init();
-    if (!this.ctx) return;
-
-    try {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(260, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(130, this.ctx.currentTime + 0.15);
-
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.025);
 
       osc.connect(gain);
       gain.connect(this.ctx.destination);
 
       osc.start();
-      osc.stop(this.ctx.currentTime + 0.16);
+      osc.stop(this.ctx.currentTime + 0.03);
     } catch (e) {}
   }
 
-  // Reveal fanfare based on points scored
-  playReveal(points) {
+  // Futuristic motorized laser shutter swoop
+  playShutterSwoosh(closing) {
     if (!this.enabled) return;
     this.init();
     if (!this.ctx) return;
 
-    const notes = {
-      5: [523.25, 659.25, 783.99, 1046.50], // C5, E5, G5, C6 (Major arpeggio)
-      3: [440.0, 554.37, 659.25],          // A4, C#5, E5
-      1: [329.63, 392.0],                  // E4, G4
-      0: [220.0, 196.0]                    // Downward bummer
-    }[points] || [440];
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
 
-    notes.forEach((freq, idx) => {
-      setTimeout(() => {
-        try {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = points === 0 ? 'sawtooth' : 'sine';
-          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-          
-          gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
+      osc.type = 'sawtooth';
+      const startF = closing ? 600 : 200;
+      const endF = closing ? 150 : 750;
 
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
+      osc.frequency.setValueAtTime(startF, this.ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(endF, this.ctx.currentTime + 0.22);
 
-          osc.start();
-          osc.stop(this.ctx.currentTime + 0.32);
-        } catch (e) {}
-      }, idx * 80);
-    });
+      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.22);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start();
+      osc.stop(this.ctx.currentTime + 0.24);
+    } catch (e) {}
+  }
+
+  // 80s Arcade Fanfare or Bummer buzz
+  playResultFanfare(points) {
+    if (!this.enabled) return;
+    this.init();
+    if (!this.ctx) return;
+
+    if (points === 3) {
+      // 3 Points: High Energy Synth Arpeggio
+      const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+      notes.forEach((freq, i) => {
+        setTimeout(() => this.beep(freq, 'sawtooth', 0.12, 0.15), i * 65);
+      });
+    } else if (points === 2) {
+      // 2 Points: Bright Arcade Chime
+      const notes = [440, 554.37, 659.25, 880];
+      notes.forEach((freq, i) => {
+        setTimeout(() => this.beep(freq, 'triangle', 0.14, 0.12), i * 75);
+      });
+    } else if (points === 1) {
+      // 1 Point: Low Positive Beeps
+      const notes = [329.63, 392.0];
+      notes.forEach((freq, i) => {
+        setTimeout(() => this.beep(freq, 'square', 0.18, 0.08), i * 90);
+      });
+    } else {
+      // 0 Points: Retro 80s 'Womp Womp' Game Over sound
+      this.beep(220, 'sawtooth', 0.2, 0.1);
+      setTimeout(() => this.beep(164.81, 'sawtooth', 0.35, 0.1), 160);
+    }
+  }
+
+  beep(freq, type, duration, volume) {
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration + 0.02);
+    } catch (e) {}
   }
 }
 
-class WavelengthGame {
+class Wavelength80sGame {
   constructor() {
-    this.sound = new SoundEffects();
-    
-    // Game State
-    this.round = 1;
-    this.totalScore = 0;
-    this.currentDeck = [...SPECTRUM_PAIRS];
-    this.shuffleDeck();
-    this.deckIndex = 0;
+    this.audio = new RetroSynthAudio();
 
-    // Target geometry: targetCenter is an angle between 15° and 165°
+    // Game State
+    this.stage = 1;
+    this.score = 0;
     this.targetCenter = 90;
-    this.needleAngle = 90; // Default center (90°)
-    this.isDragging = false;
+    this.needleAngle = 90;
     this.lastTickAngle = 90;
-    this.shutterState = 'closed'; // 'closed' | 'open'
-    this.roundConcluded = false;
+    this.isDragging = false;
+    this.gameState = 'PEEK'; // 'PEEK' -> 'GUESS' -> 'REVEALED'
 
     // DOM Elements
-    this.leftConceptEl = document.getElementById('left-concept');
-    this.rightConceptEl = document.getElementById('right-concept');
     this.roundNumEl = document.getElementById('round-number');
     this.totalScoreEl = document.getElementById('total-score');
-    this.angleValEl = document.getElementById('angle-value');
-    this.angleDescEl = document.getElementById('angle-description');
     this.statusBannerEl = document.getElementById('game-status-banner');
+    this.angleValEl = document.getElementById('angle-value');
 
     this.wheelStageEl = document.getElementById('wheel-stage');
     this.svgEl = document.getElementById('wavelength-svg');
@@ -219,20 +157,18 @@ class WavelengthGame {
     this.shutterGroup = document.getElementById('shutter-group');
     this.needleGroup = document.getElementById('needle-group');
 
-    // Controls
-    this.btnPeek = document.getElementById('btn-peek');
+    // Control Buttons
     this.btnHide = document.getElementById('btn-hide');
-    this.btnReveal = document.getElementById('btn-reveal');
+    this.btnConfirm = document.getElementById('btn-confirm');
     this.btnNextRound = document.getElementById('btn-next-round');
-    this.btnNewGame = document.getElementById('btn-new-game');
+    this.btnReset = document.getElementById('btn-reset');
     this.btnSoundToggle = document.getElementById('btn-sound-toggle');
-    this.soundIconOn = document.getElementById('sound-icon-on');
-    this.soundIconOff = document.getElementById('sound-icon-off');
+    this.soundIndicator = document.getElementById('sound-indicator');
 
-    // Modal
+    // Result Modal
     this.resultModal = document.getElementById('result-modal');
     this.resultTitle = document.getElementById('result-title');
-    this.resultPoints = document.getElementById('result-points');
+    this.resultScoreTag = document.getElementById('result-score-tag');
     this.resultDetail = document.getElementById('result-detail');
     this.resTargetDeg = document.getElementById('res-target-deg');
     this.resNeedleDeg = document.getElementById('res-needle-deg');
@@ -240,13 +176,6 @@ class WavelengthGame {
     this.btnModalDismiss = document.getElementById('btn-modal-dismiss');
 
     this.init();
-  }
-
-  shuffleDeck() {
-    for (let i = this.currentDeck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.currentDeck[i], this.currentDeck[j]] = [this.currentDeck[j], this.currentDeck[i]];
-    }
   }
 
   init() {
@@ -257,23 +186,19 @@ class WavelengthGame {
 
   renderTicks() {
     this.ticksGroup.innerHTML = '';
-    const cx = 250, cy = 250;
-    const rOuter = 224;
-    
-    // Draw degree ticks from 0° (left) to 180° (right) every 5 degrees
+    const cx = 250, cy = 250, rOuter = 224;
+
     for (let deg = 0; deg <= 180; deg += 5) {
-      // In SVG coordinates, 0° is left (-X, baseline), 90° is top (-Y), 180° is right (+X, baseline)
-      // Math rad: 0 deg on dial = Math.PI rad, 90 deg = Math.PI / 2, 180 deg = 0
-      const mathAngle = Math.PI - (deg * Math.PI / 180);
+      const mathRad = Math.PI - (deg * Math.PI / 180);
       const isMajor = deg % 30 === 0;
       const isMid = deg % 15 === 0;
-      const tickLen = isMajor ? 12 : (isMid ? 8 : 4);
+      const tickLen = isMajor ? 14 : (isMid ? 8 : 4);
       const rInner = rOuter - tickLen;
 
-      const x1 = cx + rOuter * Math.cos(mathAngle);
-      const y1 = cy - rOuter * Math.sin(mathAngle);
-      const x2 = cx + rInner * Math.cos(mathAngle);
-      const y2 = cy - rInner * Math.sin(mathAngle);
+      const x1 = cx + rOuter * Math.cos(mathRad);
+      const y1 = cy - rOuter * Math.sin(mathRad);
+      const x2 = cx + rInner * Math.cos(mathRad);
+      const y2 = cy - rInner * Math.sin(mathRad);
 
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', x1);
@@ -283,11 +208,11 @@ class WavelengthGame {
       line.setAttribute('class', `tick-line ${isMajor ? 'major' : ''}`);
       this.ticksGroup.appendChild(line);
 
-      // Major label numbers
       if (isMajor) {
-        const rText = rInner - 10;
-        const tx = cx + rText * Math.cos(mathAngle);
-        const ty = cy - rText * Math.sin(mathAngle) + 4;
+        const rText = rInner - 12;
+        const tx = cx + rText * Math.cos(mathRad);
+        const ty = cy - rText * Math.sin(mathRad) + 5;
+
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', tx);
         text.setAttribute('y', ty);
@@ -299,9 +224,8 @@ class WavelengthGame {
     }
   }
 
-  // Draw circular sector wedge in SVG: from startDeg to endDeg on 0-180 scale
+  // Semicircular sector wedge builder
   createWedgePath(cx, cy, r, startDeg, endDeg) {
-    // Clamp within 0 and 180
     const s = Math.max(0, Math.min(180, startDeg));
     const e = Math.max(0, Math.min(180, endDeg));
     if (s >= e) return '';
@@ -315,7 +239,6 @@ class WavelengthGame {
     const y2 = cy - r * Math.sin(endRad);
 
     const largeArc = (e - s) > 180 ? 1 : 0;
-    // In SVG, going clockwise from startRad (larger angle) to endRad (smaller angle):
     return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`;
   }
 
@@ -323,21 +246,21 @@ class WavelengthGame {
     this.targetSlicesGroup.innerHTML = '';
     const cx = 250, cy = 250, r = 224;
 
-    // Standard Wavelength target slices (symmetrically centered):
-    // Bullseye (dark blue): center ± 2.5° (width 5°) -> 5 pts
-    // Yellow flanks: 2.5° to 6.5° on both sides (width 4° each) -> 3 pts
-    // Red outer flanks: 6.5° to 10.5° on both sides (width 4° each) -> 1 pt
+    // Rules:
+    // Center Blue (Bullseye) = 3 Points: ±3° (6° span)
+    // Flanking Yellow = 2 Points: 3° to 8° on either side (5° span each)
+    // Outer Red = 1 Point: 8° to 14° on either side (6° span each)
     const zones = [
       // Left Red (1 pt)
-      { start: centerAngle - 10.5, end: centerAngle - 6.5, fill: '#eb3b5a', pts: 1 },
-      // Left Yellow (3 pts)
-      { start: centerAngle - 6.5, end: centerAngle - 2.5, fill: '#f7b731', pts: 3 },
-      // Center Bullseye Dark Blue (5 pts)
-      { start: centerAngle - 2.5, end: centerAngle + 2.5, fill: '#1e3799', pts: 5 },
-      // Right Yellow (3 pts)
-      { start: centerAngle + 2.5, end: centerAngle + 6.5, fill: '#f7b731', pts: 3 },
+      { start: centerAngle - 14, end: centerAngle - 8, fill: '#ff2255', stroke: '#ff007f', pts: 1 },
+      // Left Yellow (2 pts)
+      { start: centerAngle - 8, end: centerAngle - 3, fill: '#ffe600', stroke: '#fff275', pts: 2 },
+      // Center Neon Blue (3 pts)
+      { start: centerAngle - 3, end: centerAngle + 3, fill: '#0066ff', stroke: '#00f3ff', pts: 3 },
+      // Right Yellow (2 pts)
+      { start: centerAngle + 3, end: centerAngle + 8, fill: '#ffe600', stroke: '#fff275', pts: 2 },
       // Right Red (1 pt)
-      { start: centerAngle + 6.5, end: centerAngle + 10.5, fill: '#eb3b5a', pts: 1 },
+      { start: centerAngle + 8, end: centerAngle + 14, fill: '#ff2255', stroke: '#ff007f', pts: 1 }
     ];
 
     zones.forEach(zone => {
@@ -346,183 +269,154 @@ class WavelengthGame {
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', d);
         path.setAttribute('fill', zone.fill);
-        path.setAttribute('stroke', '#ffffff');
-        path.setAttribute('stroke-width', '0.75');
-        path.setAttribute('opacity', '0.95');
+        path.setAttribute('stroke', zone.stroke);
+        path.setAttribute('stroke-width', '1.5');
         this.targetSlicesGroup.appendChild(path);
       }
     });
 
-    // Add a center hairline marker on the target
+    // Center target laser hairline
     const targetRad = Math.PI - (centerAngle * Math.PI / 180);
-    const lineX = cx + r * Math.cos(targetRad);
-    const lineY = cy - r * Math.sin(targetRad);
-    const centerLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    centerLine.setAttribute('x1', cx);
-    centerLine.setAttribute('y1', cy);
-    centerLine.setAttribute('x2', lineX);
-    centerLine.setAttribute('y2', lineY);
-    centerLine.setAttribute('stroke', '#ffffff');
-    centerLine.setAttribute('stroke-width', '1.5');
-    centerLine.setAttribute('stroke-dasharray', '3 3');
-    this.targetSlicesGroup.appendChild(centerLine);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', cx);
+    line.setAttribute('y1', cy);
+    line.setAttribute('x2', cx + r * Math.cos(targetRad));
+    line.setAttribute('y2', cy - r * Math.sin(targetRad));
+    line.setAttribute('stroke', '#ffffff');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-dasharray', '4 4');
+    this.targetSlicesGroup.appendChild(line);
   }
 
   startRound() {
-    this.roundConcluded = false;
+    this.gameState = 'PEEK';
 
-    // Pick new binary pair
-    if (this.deckIndex >= this.currentDeck.length) {
-      this.shuffleDeck();
-      this.deckIndex = 0;
-    }
-    const currentPair = this.currentDeck[this.deckIndex++];
-    this.leftConceptEl.textContent = currentPair[0];
-    this.rightConceptEl.textContent = currentPair[1];
-
-    // Pick random target position between 18° and 162° (leaving safe margins from wheel ends)
-    this.targetCenter = Math.floor(Math.random() * 145) + 18;
+    // Randomize target position between 18° and 162°
+    this.targetCenter = Math.floor(Math.random() * 144) + 18;
     this.renderTargetSlices(this.targetCenter);
 
-    // Reset needle to center (90°)
+    // Reset needle to default 90° center
     this.setNeedleAngle(90);
 
-    // Shutter begins closed
-    this.setShutter(false);
+    // 1. Target is VISIBLE at first! (Shutter starts opened)
+    this.shutterGroup.classList.remove('closed');
+    this.shutterGroup.classList.add('opened');
 
-    // Update UI states
-    this.roundNumEl.textContent = this.round;
+    // UI Buttons state
+    this.btnHide.disabled = false;
+    this.btnConfirm.disabled = true;
     this.btnNextRound.disabled = true;
-    this.btnReveal.disabled = false;
-    this.statusBannerEl.innerHTML = '1. Psychic: Click <strong>Psychic Peek</strong> to secretly inspect the target, then give a clue!';
+
+    this.roundNumEl.textContent = this.stage.toString().padStart(2, '0');
+    this.totalScoreEl.textContent = this.score.toString().padStart(4, '0');
+
+    this.statusBannerEl.innerHTML = '[STAGE START] Target is visible! Memorize its position, then press <strong>[HIDE TARGET]</strong>!';
   }
 
-  setShutter(isOpen) {
-    if (isOpen) {
-      this.shutterGroup.classList.remove('closed');
-      this.shutterGroup.classList.add('opened');
-      this.shutterState = 'open';
-    } else {
-      this.shutterGroup.classList.remove('opened');
-      this.shutterGroup.classList.add('closed');
-      this.shutterState = 'closed';
-    }
-    this.sound.playShutter();
+  hideTarget() {
+    this.gameState = 'GUESS';
+    this.audio.playShutterSwoosh(true);
+
+    // Motorized shutter closes down
+    this.shutterGroup.classList.remove('opened');
+    this.shutterGroup.classList.add('closed');
+
+    this.btnHide.disabled = true;
+    this.btnConfirm.disabled = false;
+
+    this.statusBannerEl.innerHTML = '[GUESS MODE] Target concealed! Drag the laser needle to your guess, then press <strong>[CONFIRM GUESS]</strong>!';
   }
 
-  setNeedleAngle(deg) {
-    // Clamp needle between 0° (left) and 180° (right)
-    this.needleAngle = Math.max(0, Math.min(180, Math.round(deg * 10) / 10));
-    
-    // In our SVG:
-    // When pointer polygon is drawn straight up (12 o'clock), rotating it by:
-    // Dial 0° = 9 o'clock (-90° rotation from 12 o'clock)
-    // Dial 90° = 12 o'clock (0° rotation)
-    // Dial 180° = 3 o'clock (+90° rotation)
-    const svgRotation = this.needleAngle - 90;
-    this.needleGroup.setAttribute('transform', `rotate(${svgRotation}, 250, 250)`);
+  confirmGuess() {
+    if (this.gameState !== 'GUESS') return;
+    this.gameState = 'REVEALED';
 
-    // Update angle readout display
-    this.angleValEl.textContent = `${Math.round(this.needleAngle)}°`;
-    if (this.needleAngle < 40) {
-      this.angleDescEl.textContent = `(Heavy ${this.leftConceptEl.textContent})`;
-    } else if (this.needleAngle > 140) {
-      this.angleDescEl.textContent = `(Heavy ${this.rightConceptEl.textContent})`;
-    } else if (this.needleAngle >= 80 && this.needleAngle <= 100) {
-      this.angleDescEl.textContent = '(Dead Center)';
-    } else if (this.needleAngle < 90) {
-      this.angleDescEl.textContent = `(Leaning ${this.leftConceptEl.textContent})`;
-    } else {
-      this.angleDescEl.textContent = `(Leaning ${this.rightConceptEl.textContent})`;
+    // Target appears!
+    this.audio.playShutterSwoosh(false);
+    this.shutterGroup.classList.remove('closed');
+    this.shutterGroup.classList.add('opened');
+
+    // Evaluate score: Blue=3, Yellow=2, Red=1, Miss=0
+    const diff = Math.abs(this.needleAngle - this.targetCenter);
+    let pts = 0;
+    let title = "MISS! [0 PTS]";
+    let desc = "OUTSIDE TARGET FREQUENCY. SIGNAL LOST!";
+
+    if (diff <= 3.0) {
+      pts = 3;
+      title = "BULLSEYE! [BLUE]";
+      desc = "DIRECT FREQUENCY LOCK IN THE 3-POINT BLUE ZONE!";
+    } else if (diff <= 8.0) {
+      pts = 2;
+      title = "CLOSE! [YELLOW]";
+      desc = "EXCELLENT CALIBRATION IN THE 2-POINT YELLOW ZONE!";
+    } else if (diff <= 14.0) {
+      pts = 1;
+      title = "NEAR! [RED]";
+      desc = "PERIPHERAL CONTACT IN THE 1-POINT RED ZONE!";
     }
 
-    // Play subtle mechanical tick every ~3 degrees
+    this.score += pts;
+    this.totalScoreEl.textContent = this.score.toString().padStart(4, '0');
+
+    this.audio.playResultFanfare(pts);
+
+    // Populate Modal
+    this.resultTitle.textContent = title;
+    this.resultScoreTag.textContent = `+${pts} POINTS`;
+    this.resultScoreTag.className = `res-score-badge score-${pts}`;
+    this.resultDetail.textContent = desc;
+    this.resTargetDeg.textContent = `${this.targetCenter.toFixed(1)}°`;
+    this.resNeedleDeg.textContent = `${this.needleAngle.toFixed(1)}°`;
+    this.resDiffDeg.textContent = `${diff.toFixed(1)}°`;
+
+    this.resultModal.classList.remove('hidden');
+
+    this.btnConfirm.disabled = true;
+    this.btnNextRound.disabled = false;
+
+    this.statusBannerEl.innerHTML = `[STAGE COMPLETE] Scored <strong>+${pts} PTS</strong> (Variance: ${diff.toFixed(1)}°). Press <strong>[NEXT ROUND]</strong>!`;
+  }
+
+  setNeedleAngle(angle) {
+    this.needleAngle = Math.max(0, Math.min(180, Math.round(angle * 10) / 10));
+
+    // Needle pointer in SVG:
+    // 0° = pointing left (-90° from vertical)
+    // 90° = pointing straight up (0° rotation)
+    // 180° = pointing right (+90° from vertical)
+    const rotation = this.needleAngle - 90;
+    this.needleGroup.setAttribute('transform', `rotate(${rotation}, 250, 250)`);
+
+    this.angleValEl.textContent = `${this.needleAngle.toFixed(1)}°`;
+
+    // Audio click every ~3 degrees
     if (Math.abs(this.needleAngle - this.lastTickAngle) >= 3.0) {
-      this.sound.playTick();
+      this.audio.playTick(this.needleAngle);
       this.lastTickAngle = this.needleAngle;
     }
   }
 
-  calculateScore() {
-    const diff = Math.abs(this.needleAngle - this.targetCenter);
-    let points = 0;
-    let title = "Missed!";
-    let detail = "Out of the target zone. Keep tuning your telepathic frequency!";
+  // Accurate pointer-to-angle math using bounding client rect & SVG transformation
+  updateAngleFromPointer(clientX, clientY) {
+    const rect = this.svgEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
 
-    if (diff <= 2.5) {
-      points = 5;
-      title = "Bull's Eye! 🎯";
-      detail = "Direct hit in the dark blue zone! Exact frequency match!";
-    } else if (diff <= 6.5) {
-      points = 3;
-      title = "Close! ⭐";
-      detail = "Landed in the yellow zone. Great psychic intuition!";
-    } else if (diff <= 10.5) {
-      points = 1;
-      title = "Near! ✨";
-      detail = "Clipped the outer red zone. Points on the board!";
-    }
+    // Center pivot (250, 250) in screen coordinates
+    const pivotScreenX = rect.left + (250 / 500) * rect.width;
+    const pivotScreenY = rect.top + (250 / 290) * rect.height;
 
-    return { points, title, detail, diff: diff.toFixed(1) };
-  }
+    const dx = clientX - pivotScreenX;
+    const dy = pivotScreenY - clientY; // Upwards is positive
 
-  revealAndScore() {
-    if (this.roundConcluded) return;
-    this.roundConcluded = true;
-
-    // Open shutter completely to reveal the target
-    this.setShutter(true);
-
-    const scoreData = this.calculateScore();
-    this.totalScore += scoreData.points;
-    this.totalScoreEl.textContent = this.totalScore;
-
-    this.sound.playReveal(scoreData.points);
-
-    // Show result modal
-    this.resultTitle.textContent = scoreData.title;
-    this.resultPoints.textContent = `+${scoreData.points} PTS`;
-    this.resultPoints.className = `result-points points-${scoreData.points}`;
-    this.resultDetail.textContent = scoreData.detail;
-    this.resTargetDeg.textContent = `${this.targetCenter.toFixed(1)}°`;
-    this.resNeedleDeg.textContent = `${this.needleAngle.toFixed(1)}°`;
-    this.resDiffDeg.textContent = `${scoreData.diff}°`;
-
-    this.resultModal.classList.remove('hidden');
-
-    this.btnReveal.disabled = true;
-    this.btnNextRound.disabled = false;
-    this.statusBannerEl.innerHTML = `Round completed! Scored <strong>+${scoreData.points} points</strong>. Click <strong>Next Round</strong> to keep playing!`;
-  }
-
-  // Pointer & Drag Coordinate Calculation
-  handlePointerEvent(event) {
-    const svgRect = this.svgEl.getBoundingClientRect();
-    const clientX = event.clientX || (event.touches && event.touches[0].clientX);
-    const clientY = event.clientY || (event.touches && event.touches[0].clientY);
-
-    if (clientX === undefined || clientY === undefined) return;
-
-    // SVG coordinate space is 500 x 290, pivot center is (250, 250)
-    const scaleX = 500 / svgRect.width;
-    const scaleY = 290 / svgRect.height;
-
-    const svgX = (clientX - svgRect.left) * scaleX;
-    const svgY = (clientY - svgRect.top) * scaleY;
-
-    // Vector from pivot (250, 250) to pointer
-    const dx = svgX - 250;
-    const dy = 250 - svgY; // Invert Y because SVG Y goes downward
-
-    // Calculate angle in degrees
-    // Math.atan2(dy, dx) returns:
-    // Left (-1, 0) => Math.PI rad (180 deg)
-    // Top (0, 1) => Math.PI / 2 rad (90 deg)
-    // Right (1, 0) => 0 rad (0 deg)
+    // Angle in degrees from left baseline:
+    // Left (dx < 0, dy = 0) => 0°
+    // Top (dx = 0, dy > 0) => 90°
+    // Right (dx > 0, dy = 0) => 180°
     let rad = Math.atan2(dy, dx);
     let deg = (Math.PI - rad) * (180 / Math.PI);
 
-    // If pointer goes slightly below baseline, clamp to nearest end
+    // Clamp when pointer is dragged below the baseline
     if (dy < 0) {
       deg = dx < 0 ? 0 : 180;
     }
@@ -533,93 +427,83 @@ class WavelengthGame {
   bindEvents() {
     // Sound Toggle
     this.btnSoundToggle.addEventListener('click', () => {
-      const enabled = this.sound.toggle();
-      if (enabled) {
-        this.soundIconOn.classList.remove('hidden');
-        this.soundIconOff.classList.add('hidden');
-      } else {
-        this.soundIconOn.classList.add('hidden');
-        this.soundIconOff.classList.remove('hidden');
-      }
+      const on = this.audio.toggle();
+      this.soundIndicator.textContent = on ? 'SFX: ON' : 'SFX: OFF';
     });
 
-    // Psychic Peek (Peek / Toggle Shutter)
-    this.btnPeek.addEventListener('click', () => {
-      this.sound.init();
-      this.setShutter(true);
-      this.statusBannerEl.innerHTML = '👀 <strong>Psychic Peek Active:</strong> Memorize the target position, then click <em>Hide Target</em>!';
-    });
-
-    // Hide Target (Lock in cover for guessing)
+    // Hide Target Button
     this.btnHide.addEventListener('click', () => {
-      this.sound.init();
-      this.setShutter(false);
-      this.statusBannerEl.innerHTML = '🎯 <strong>Team Turn:</strong> Discuss the clue and drag the red needle to lock in your guess!';
+      this.hideTarget();
     });
 
-    // Reveal & Score
-    this.btnReveal.addEventListener('click', () => {
-      this.sound.init();
-      this.revealAndScore();
+    // Confirm Guess Button
+    this.btnConfirm.addEventListener('click', () => {
+      this.confirmGuess();
     });
 
     // Next Round
     this.btnNextRound.addEventListener('click', () => {
-      this.round++;
+      this.stage++;
       this.startRound();
     });
 
-    // New Game Reset
-    this.btnNewGame.addEventListener('click', () => {
-      if (confirm('Start a new game and reset total score?')) {
-        this.round = 1;
-        this.totalScore = 0;
-        this.shuffleDeck();
-        this.deckIndex = 0;
-        this.startRound();
-      }
+    // Reset Game
+    this.btnReset.addEventListener('click', () => {
+      this.stage = 1;
+      this.score = 0;
+      this.startRound();
     });
 
-    // Modal dismiss
+    // Dismiss Modal
     this.btnModalDismiss.addEventListener('click', () => {
       this.resultModal.classList.add('hidden');
     });
 
-    // Drag handlers for the needle
-    const onPointerDown = (e) => {
-      this.sound.init();
+    // Needle dragging mechanics - responsive across whole window once initiated
+    const handleStart = (e) => {
+      this.audio.init();
       this.isDragging = true;
       this.needleGroup.classList.add('dragging');
-      this.handlePointerEvent(e);
-      e.preventDefault();
+
+      const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+      if (clientX !== undefined) {
+        this.updateAngleFromPointer(clientX, clientY);
+      }
+      if (e.cancelable) e.preventDefault();
     };
 
-    const onPointerMove = (e) => {
+    const handleMove = (e) => {
       if (!this.isDragging) return;
-      this.handlePointerEvent(e);
-      e.preventDefault();
+      const clientX = e.clientX ?? (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY ?? (e.touches && e.touches[0].clientY);
+      if (clientX !== undefined) {
+        this.updateAngleFromPointer(clientX, clientY);
+      }
+      if (e.cancelable) e.preventDefault();
     };
 
-    const onPointerUp = () => {
+    const handleEnd = () => {
       if (this.isDragging) {
         this.isDragging = false;
         this.needleGroup.classList.remove('dragging');
       }
     };
 
-    // Attach to wheel stage for fluid touch & pointer interactions
-    this.wheelStageEl.addEventListener('mousedown', onPointerDown);
-    window.addEventListener('mousemove', onPointerMove);
-    window.addEventListener('mouseup', onPointerUp);
+    // Listen on wheel-stage & needle, track globally on window
+    this.wheelStageEl.addEventListener('mousedown', handleStart);
+    this.wheelStageEl.addEventListener('touchstart', handleStart, { passive: false });
 
-    this.wheelStageEl.addEventListener('touchstart', onPointerDown, { passive: false });
-    window.addEventListener('touchmove', onPointerMove, { passive: false });
-    window.addEventListener('touchend', onPointerUp);
-    window.addEventListener('touchcancel', onPointerUp);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('touchmove', handleMove, { passive: false });
+
+    window.addEventListener('mouseup', handleEnd);
+    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('touchcancel', handleEnd);
   }
 }
 
-// Instantiate game on load
+// Boot up game
 window.addEventListener('DOMContentLoaded', () => {
-  new WavelengthGame();
+  new Wavelength80sGame();
 });
